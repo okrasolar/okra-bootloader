@@ -30,4 +30,6 @@ int main()
     bl.boot();
 }
 
+// Reduce code size, because the default implementation of __register_exitproc
+// is large and calls malloc.
 extern "C" void __register_exitproc(void) {}
