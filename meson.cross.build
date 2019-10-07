@@ -11,12 +11,10 @@ strip   = 'arm-none-eabi-strip'
 gdb     = 'arm-none-eabi-gdb'
 
 [properties]
-mcu_src_dir = './bootloader'
-cicada_build_target = 'stm32f1'
 cpp_args =  ['-DSTM32F103xE',       # MCU type, used by STM32Cube
              '-mcpu=cortex-m3',     # target CPU type
              '-mthumb',             # use Thumb instruction set
-             '-Os',                 # optimise for speed
+             '-Os',                 # optimise for size
              '-Wall',               # enable all compiler warnings
              '-fdata-sections',     # each variable to a seperate section
              '-ffunction-sections', # each function to a seperate section
@@ -28,7 +26,7 @@ cpp_args =  ['-DSTM32F103xE',       # MCU type, used by STM32Cube
 c_args =    ['-DSTM32F103xE',       # MCU type, used by STM32Cube
              '-mcpu=cortex-m3',     # target CPU type
              '-mthumb',             # use Thumb instruction set
-             '-Os',                 # optimise for debug
+             '-Os',                 # optimise for size
              '-Wall',               # enable all compiler warnings
              '-fdata-sections',     # each variable to a seperate section
              '-ffunction-sections', # each function to a seperate section
