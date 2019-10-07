@@ -35,7 +35,7 @@ mcu_files = get_variable('mcu_files')
 # Generate elf file for MCU
 main_elf = executable(
     'main',
-    [ system_files, mcu_files ],
+    [ system_files, mcu_files, 'src/System_stm32f1.cpp' ],
     name_suffix         : 'elf',
     include_directories : [ system_inc, mcu_inc ],
     link_args           : [ link_args]
@@ -56,6 +56,16 @@ main_hex = custom_target(
     command          : [ objcopy, '-O', 'ihex', 'main.elf', 'main.hex' ],
     depends          : [ main_elf ]
 )
+
+# Build native test executable
+main_test = executable(
+    'tests',
+    [ mcu_files, 'src/System_native.cpp' ],
+    include_directories : [ system_inc, mcu_inc ],
+    native              : true,
+    build_by_default    : false
+)
+test('Bootloader test', main_test)
 
 # Custom run commands
 run_target('erase',             command: [ stflash,  'erase' ])

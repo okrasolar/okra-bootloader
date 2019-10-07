@@ -22,17 +22,19 @@
  *
  */
 
-#include "Bootloader.h"
 #include "System.h"
 
-int main()
+void System::readStatusReg(BootloaderStatus& status)
 {
-    System sys;
-
-    Bootloader bl;
-    bl.boot(sys);
+    status = { 0 };
 }
 
-// Reduce code size, because the default implementation of __register_exitproc
-// is large and calls malloc.
-extern "C" void __register_exitproc(void) {}
+void System::writeStatusReg(BootloaderStatus& status)
+{
+
+}
+
+void System::executeFromAddress(uint32_t bootAddress)
+{
+
+}

@@ -22,17 +22,33 @@
  *
  */
 
-#include "Bootloader.h"
-#include "System.h"
+#pragma once
 
-int main()
+#include <cstdint>
+
+#include "Config.h"
+
+class System
 {
-    System sys;
+public:
+     /**
+     * @brief read the status from flash
+     *
+     * @param status struct to read the status into
+     */
+    void readStatusReg(BootloaderStatus& status);
 
-    Bootloader bl;
-    bl.boot(sys);
-}
+    /**
+     * @brief write the stataus into flash
+     *
+     * @param status new status data to write
+     */
+    void writeStatusReg(BootloaderStatus& status);
 
-// Reduce code size, because the default implementation of __register_exitproc
-// is large and calls malloc.
-extern "C" void __register_exitproc(void) {}
+    /**
+     * @brief execute the binary at address bootAddress
+     *
+     * @param bootAddress absolute memory address of the binary to execute
+     */
+    void executeFromAddress(uint32_t bootAddress);
+};
