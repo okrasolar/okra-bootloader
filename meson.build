@@ -41,25 +41,27 @@ main_elf = executable(
     link_args           : [ link_args]
 )
 
-# Build custom targets MCU
-main_bin = custom_target(
-    'main_bin',
-    output           : [ 'main.bin' ],
-    build_by_default : true,
-    command          : [ objcopy, '-O', 'binary', '-S', 'main.elf', 'main.bin' ],
-    depends          : [ main_elf ]
-)
-main_hex = custom_target(
-    'main_hex',
-    output           : [ 'main.hex' ],
-    build_by_default : false,
-    command          : [ objcopy, '-O', 'ihex', 'main.elf', 'main.hex' ],
-    depends          : [ main_elf ]
-)
+if (meson.is_subproject() != true)
+    # Build custom targets MCU
+    main_bin = custom_target(
+        'main_bin',
+        output           : [ 'main.bin' ],
+        build_by_default : true,
+        command          : [ objcopy, '-O', 'binary', '-S', 'main.elf', 'main.bin' ],
+        depends          : [ main_elf ]
+    )
+    main_hex = custom_target(
+        'main_hex',
+        output           : [ 'main.hex' ],
+        build_by_default : false,
+        command          : [ objcopy, '-O', 'ihex', 'main.elf', 'main.hex' ],
+        depends          : [ main_elf ]
+    )
 
-# Custom run commands
-run_target('erase',             command: [ stflash,  'erase' ])
-run_target('lint',              command: [ python, '.clang-format.py', '-r',       '-e', 'src', 'src' ])
-run_target('fix',               command: [ python, '.clang-format.py', '-r', '-s', '-e', 'src', 'src' ])
-run_target('flash',             command: [ stflash, '--reset', 'write', main_bin, '0x08000000' ], depends: main_bin)
-run_target('size',              command: [ size, main_hex ], depends: main_hex)
+    # Custom run commands
+    run_target('erase',             command: [ stflash,  'erase' ])
+    run_target('lint',              command: [ python, '.clang-format.py', '-r',       '-e', 'src', 'src' ])
+    run_target('fix',               command: [ python, '.clang-format.py', '-r', '-s', '-e', 'src', 'src' ])
+    run_target('flash',             command: [ stflash, '--reset', 'write', main_bin, '0x08000000' ], depends: main_bin)
+    run_target('size',              command: [ size, main_hex ], depends: main_hex)
+endif
