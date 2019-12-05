@@ -26,7 +26,7 @@ const uint32_t BOOTLOADER_STATUS_STRUCT_ADDR = 0x08000800;
 const uint8_t BOOTLOADER_MAX_APPS = 2;
 
 /* Actual start addresses of the applications */
-const uint32_t BOOTLOADER_APP_ADDRESS[BOOTLOADER_MAX_APPS] = { 0x08006000, 0x08023000 };
+const uint32_t BOOTLOADER_APP_ADDRESS[BOOTLOADER_MAX_APPS] = { 0x08001000, 0x08040800 };
 
 /* Bootloader state enumeration. This state needs to be set to "newApp"
  * by the application after an update, and to "stableApp" after the
