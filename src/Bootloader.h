@@ -27,6 +27,7 @@
 #include <cstdint>
 
 #include "Config.h"
+#include "System.h"
 
 class Bootloader
 {
@@ -35,20 +36,5 @@ class Bootloader
      * @brief entrypoint for the bootloader. Selects and runs the application
      * to boot.
      */
-    void boot();
-
-  private:
-    /**
-     * @brief execute the binary at address bootAddress
-     *
-     * @param bootAddress absolute memory address of the binary to execute
-     */
-    void executeFromAddress(uint32_t bootAddress);
-
-    /**
-     * @brief write the stataus into flash
-     *
-     * @param status new status data to write
-     */
-    void writeStatusReg(BootloaderStatus& status);
+    void boot(System& _system);
 };
