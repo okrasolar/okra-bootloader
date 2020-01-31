@@ -66,7 +66,7 @@ if (meson.is_subproject() != true)
     test_files = get_variable('test_files')
     main_test = executable(
         'tests',
-        [ mcu_files, test_files, 'src/System_native.cpp' ],
+        [ mcu_files, test_files ],
         include_directories : [ system_inc, mcu_inc ],
         dependencies        : [ cpputest_dep ],
         native              : true,

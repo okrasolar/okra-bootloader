@@ -1,3 +1,4 @@
 test_files = files([
-    'main.cpp'
+    'main.cpp',
+    'bootlogictest.cpp'
 ])
