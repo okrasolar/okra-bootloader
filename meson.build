@@ -24,6 +24,7 @@ system_inc = include_directories([
     'CMSIS/Include',
     'CMSIS/Device/ST/STM32F1xx/Include'
 ])
+c_args = [ '-Os' ]
 link_args = '-Wl,-T,@0@/@1@'.format(meson.current_source_dir(), 'linker.ld')
 
 # Add src dependancies
@@ -37,7 +38,9 @@ main_elf = executable(
     [ system_files, mcu_files, 'main.cpp', 'src/System_stm32f1.cpp' ],
     name_suffix         : 'elf',
     include_directories : [ system_inc, mcu_inc ],
-    link_args           : [ link_args]
+    cpp_args            : [ c_args ],
+    c_args              : [ c_args ],
+    link_args           : [ link_args ]
 )
 
 if (meson.is_subproject() != true)
