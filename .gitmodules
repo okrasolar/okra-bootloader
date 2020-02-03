@@ -1,0 +1,3 @@
+[submodule "cpputest/src"]
+	path = subprojects/cpputest/src
+	url = git://github.com/cpputest/cpputest.git

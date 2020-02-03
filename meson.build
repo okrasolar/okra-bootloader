@@ -3,7 +3,6 @@ project(
     'c',
     'cpp',
     version: '0.0.3',
-    subproject_dir: 'dep',
     default_options:  [ 'c_std=c11', 'cpp_std=gnu++11' ]
 )
 
@@ -25,6 +24,7 @@ system_inc = include_directories([
     'CMSIS/Include',
     'CMSIS/Device/ST/STM32F1xx/Include'
 ])
+c_args = [ '-Os' ]
 link_args = '-Wl,-T,@0@/@1@'.format(meson.current_source_dir(), 'linker.ld')
 
 # Add src dependancies
@@ -35,10 +35,12 @@ mcu_files = get_variable('mcu_files')
 # Generate elf file for MCU
 main_elf = executable(
     'main',
-    [ system_files, mcu_files, 'src/System_stm32f1.cpp' ],
+    [ system_files, mcu_files, 'main.cpp', 'src/System_stm32f1.cpp' ],
     name_suffix         : 'elf',
     include_directories : [ system_inc, mcu_inc ],
-    link_args           : [ link_args]
+    cpp_args            : [ c_args ],
+    c_args              : [ c_args ],
+    link_args           : [ link_args ]
 )
 
 if (meson.is_subproject() != true)
@@ -57,11 +59,19 @@ if (meson.is_subproject() != true)
         command          : [ objcopy, '-O', 'ihex', 'main.elf', 'main.hex' ],
         depends          : [ main_elf ]
     )
+
+    # Add CppUTest dependancy
+    cpputest     = subproject('cpputest')
+    cpputest_dep = cpputest.get_variable('cpputest_dep')
+
     # Build native test executable
+    subdir('test')
+    test_files = get_variable('test_files')
     main_test = executable(
         'tests',
-        [ mcu_files, 'src/System_native.cpp' ],
+        [ mcu_files, test_files ],
         include_directories : [ system_inc, mcu_inc ],
+        dependencies        : [ cpputest_dep ],
         native              : true,
         build_by_default    : false
     )

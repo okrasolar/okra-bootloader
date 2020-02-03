@@ -14,7 +14,6 @@ gdb     = 'arm-none-eabi-gdb'
 cpp_args =  ['-DSTM32F103xE',       # MCU type, used by STM32Cube
              '-mcpu=cortex-m3',     # target CPU type
              '-mthumb',             # use Thumb instruction set
-             '-Os',                 # optimise for size
              '-Wall',               # enable all compiler warnings
              '-fdata-sections',     # each variable to a seperate section
              '-ffunction-sections', # each function to a seperate section
@@ -26,7 +25,6 @@ cpp_args =  ['-DSTM32F103xE',       # MCU type, used by STM32Cube
 c_args =    ['-DSTM32F103xE',       # MCU type, used by STM32Cube
              '-mcpu=cortex-m3',     # target CPU type
              '-mthumb',             # use Thumb instruction set
-             '-Os',                 # optimise for size
              '-Wall',               # enable all compiler warnings
              '-fdata-sections',     # each variable to a seperate section
              '-ffunction-sections', # each function to a seperate section
@@ -39,7 +37,6 @@ c_args =    ['-DSTM32F103xE',       # MCU type, used by STM32Cube
 cpp_link_args = ['-Wl,--gc-sections',
                  '-mcpu=cortex-m3',
                  '-mthumb',
-                 '-Os',
                  '-fdata-sections',
                  '-ffunction-sections',
                  '-fno-exceptions',
@@ -50,7 +47,6 @@ cpp_link_args = ['-Wl,--gc-sections',
 c_link_args =   ['-Wl,--gc-sections',
                  '-mcpu=cortex-m3',
                  '-mthumb',
-                 '-Os',
                  '-fdata-sections',
                  '-ffunction-sections',
                  '-fno-exceptions',
