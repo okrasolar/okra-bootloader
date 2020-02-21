@@ -29,12 +29,8 @@ void System::readStatusReg(BootloaderStatus& status)
     status = { 0 };
 }
 
-void System::writeStatusReg(BootloaderStatus& status)
-{
+void System::writeStatusReg(BootloaderStatus& status) {}
 
-}
+void System::executeFromAddress(uint32_t bootAddress) {}
 
-void System::executeFromAddress(uint32_t bootAddress)
-{
-
-}
+void System::enableWatchdog() {}
