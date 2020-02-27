@@ -25,6 +25,12 @@
 #include "System.h"
 #include "stm32f1xx.h"
 
+// Watchdog clock frequency is ~40kHz, divide clock by 64
+static const uint32_t WATCHDOG_PRESCALER = 0b100;
+
+// Watchdog timeout of 5 seconds
+static const uint32_t WATCHDOG_COUNTER = 3125;
+
 /* application entry point */
 typedef void (*AppEntry)(void);
 
@@ -104,4 +110,14 @@ void System::executeFromAddress(uint32_t bootAddress)
 
     /* Should never reach here. */
     __NOP();
+}
+
+void System::enableWatchdog()
+{
+    WRITE_REG(IWDG->KR, 0x5555);               // Disable write protection of IWDG registers
+    WRITE_REG(IWDG->PR, WATCHDOG_PRESCALER);   // Clock frequency is ~40kHz, divide clock by 64
+    WRITE_REG(IWDG->RLR, WATCHDOG_COUNTER);    // Watchdog timeout of 5 seconds
+    WRITE_REG(IWDG->KR, 0xAAAA);               // Reload IWDG
+    WRITE_REG(IWDG->KR, 0xCCCC);               // Start IWDG
+    WRITE_REG(IWDG->KR, 0xAAAA);               // Kick IWDG
 }

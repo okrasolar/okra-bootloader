@@ -48,3 +48,10 @@ struct BootloaderStatus {
     uint32_t liveAppSelect;
     uint32_t retryCount;
 };
+
+/*
+ * Enables the watchdog for the MCU. The actual implementation details,
+ * as well as the value for the watchdog counter are platform dependent
+ * and can be configured in the according System_*.cpp file.
+ */
+const bool ENABLE_WATCHDOG = true;

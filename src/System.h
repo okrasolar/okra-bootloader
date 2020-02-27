@@ -30,8 +30,8 @@
 
 class System
 {
-public:
-     /**
+  public:
+    /**
      * @brief read the status from flash
      *
      * @param status struct to read the status into
@@ -51,4 +51,9 @@ public:
      * @param bootAddress absolute memory address of the binary to execute
      */
     void executeFromAddress(uint32_t bootAddress);
+
+    /**
+     * @brief enables the MCU's watchdog.
+     */
+    void enableWatchdog();
 };
