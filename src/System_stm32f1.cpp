@@ -57,6 +57,13 @@ void System::writeStatusReg(BootloaderStatus& status)
     WRITE_REG(FLASH->KEYR, FLASH_KEY1);
     WRITE_REG(FLASH->KEYR, FLASH_KEY2);
 
+    int retry = 0;
+    while(READ_BIT(FLASH->CR, FLASH_CR_LOCK) != RESET) {
+        if (retry++ > 100000) {
+            return;
+        }
+    }
+
     // Erase page
     SET_BIT(FLASH->CR, FLASH_CR_PER);
     WRITE_REG(FLASH->AR, BOOTLOADER_STATUS_STRUCT_ADDR);
