@@ -15,6 +15,12 @@ python       = find_program('python3', required: false)
 objcopy      = '@0@'.format(find_program('objcopy').path())
 size         = '@0@'.format(find_program('size').path())
 
+# Build time defines
+option_defines = []
+if get_option('COPYBINARY').enabled()
+    option_defines += '-DCOPYBINARY'
+endif
+
 # Startup and system files
 system_files = files([
     'startup.s',
@@ -24,7 +30,7 @@ system_inc = include_directories([
     'CMSIS/Include',
     'CMSIS/Device/ST/STM32F1xx/Include'
 ])
-c_args = [ '-Os' ]
+c_args = [ option_defines, '-Os' ]
 link_args = '-Wl,-T,@0@/@1@'.format(meson.current_source_dir(), 'linker.ld')
 
 # Add src dependancies
@@ -72,6 +78,8 @@ if (meson.is_subproject() != true)
         [ mcu_files, test_files ],
         include_directories : [ system_inc, mcu_inc ],
         dependencies        : [ cpputest_dep ],
+        c_args: option_defines,
+        cpp_args: option_defines,
         native              : true,
         build_by_default    : false
     )

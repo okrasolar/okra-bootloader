@@ -9,6 +9,8 @@
 BootloaderStatus inStatus;
 BootloaderStatus outStatus;
 uint32_t finalBootAddress = 0;
+uint32_t copySourceAddress = 0;
+uint32_t copyDestinationAddress = 0;
 bool readCalled = false;
 bool writeCalled = false;
 
@@ -29,6 +31,14 @@ void System::executeFromAddress(uint32_t bootAddress)
     finalBootAddress = bootAddress;
 }
 
+void System::enableWatchdog() {}
+
+void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t sizr)
+{
+    copySourceAddress = sourceAddress;
+    copyDestinationAddress = destinationAddress;
+}
+
 TEST_GROUP(BootLogicTest){
     virtual void setup()
     {
@@ -43,11 +53,12 @@ TEST_GROUP(BootLogicTest){
 TEST(BootLogicTest, FirstBoot)
 {
     System sys;
+    bool enableWatchdog = false;
 
     inStatus = { 0 };
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_TRUE(writeCalled);
@@ -59,12 +70,19 @@ TEST(BootLogicTest, FirstBoot)
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
     CHECK_EQUAL(0, outStatus.liveAppSelect);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootCurrentAppA)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -73,17 +91,24 @@ TEST(BootLogicTest, BootCurrentAppA)
     inStatus.liveAppSelect = 0;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_FALSE(writeCalled);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootCurrentAppB)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -92,17 +117,24 @@ TEST(BootLogicTest, BootCurrentAppB)
     inStatus.liveAppSelect = 1;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_FALSE(writeCalled);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[1]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[1], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootNewAppA)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -111,19 +143,26 @@ TEST(BootLogicTest, BootNewAppA)
     inStatus.liveAppSelect = 0;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_TRUE(writeCalled);
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootNewAppB)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -132,19 +171,26 @@ TEST(BootLogicTest, BootNewAppB)
     inStatus.liveAppSelect = 1;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_TRUE(writeCalled);
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[1]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[1], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootBAfterAFails)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -154,7 +200,7 @@ TEST(BootLogicTest, BootBAfterAFails)
 
     Bootloader bl;
     for (int i = 0; i < BOOTLOADER_MAX_RETRIES; i++) {
-        bl.boot(sys);
+        bl.boot(sys, enableWatchdog);
         inStatus = outStatus;
     }
 
@@ -163,12 +209,19 @@ TEST(BootLogicTest, BootBAfterAFails)
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[1]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[1], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootAAfterBFails)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -178,7 +231,7 @@ TEST(BootLogicTest, BootAAfterBFails)
 
     Bootloader bl;
     for (int i = 0; i < BOOTLOADER_MAX_RETRIES; i++) {
-        bl.boot(sys);
+        bl.boot(sys, enableWatchdog);
         inStatus = outStatus;
     }
 
@@ -187,5 +240,11 @@ TEST(BootLogicTest, BootAAfterBFails)
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }
