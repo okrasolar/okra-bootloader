@@ -1,11 +1,11 @@
 #pragma once
 
 /* Length of the bootloader name string (including \0 termination) */
-const uint8_t BOOTLADER_NAME_LENGTH = 16;
+const uint8_t BOOTLOADER_NAME_LENGTH = 16;
 
 /* Name of the bootloader. This name is copied to the
  * status flash at first boot */
-const char BOOTLOADER_NAME[BOOTLADER_NAME_LENGTH] = "Okra Bootloader";
+const char BOOTLOADER_NAME[BOOTLOADER_NAME_LENGTH] = "Okra Bootloader";
 
 /* Version of the bootloader */
 const uint8_t BOOTLOADER_VERSION_BUILD = 1;
@@ -25,8 +25,14 @@ const uint32_t BOOTLOADER_STATUS_STRUCT_ADDR = 0x08000800;
  * be set to 2, to allow A/B switching between apps after an update */
 const uint8_t BOOTLOADER_MAX_APPS = 2;
 
-/* Actual start addresses of the applications */
-const uint32_t BOOTLOADER_APP_ADDRESS[BOOTLOADER_MAX_APPS] = { 0x08001000, 0x08040800 };
+/* Size of each app in bytes */
+const int32_t APP_SIZE = 260096;
+
+/* Source address of the applications */
+const uint32_t BOOTLOADER_APP_ADDRESS[BOOTLOADER_MAX_APPS] = { 0x08040800, 0x08080000 };
+
+/* Actual boot address */
+const uint32_t BOOT_ADDRESS = 0x08001000;
 
 /* Bootloader state enumeration. This state needs to be set to "newApp"
  * by the application after an update, and to "stableApp" after the
@@ -42,7 +48,7 @@ enum BootloaderState {
  * in flash by the app after first boot (stableApp) or after an update of the
  * other firmware binary (newApp) */
 struct BootloaderStatus {
-    char bootloaderName[BOOTLADER_NAME_LENGTH];
+    char bootloaderName[BOOTLOADER_NAME_LENGTH];
     uint32_t bootloaderVersion;
     uint32_t status;   // Update this field and write to flash in your app!
     uint32_t liveAppSelect;

@@ -53,35 +53,17 @@ void System::writeStatusReg(BootloaderStatus& status)
     // Make sure the status reg is halfword aligned
     static_assert(sizeof(status) % 2 == 0);
 
-    // Unlock the flash
-    WRITE_REG(FLASH->KEYR, FLASH_KEY1);
-    WRITE_REG(FLASH->KEYR, FLASH_KEY2);
+    unlockFlash();
 
-    // Erase page
-    SET_BIT(FLASH->CR, FLASH_CR_PER);
-    WRITE_REG(FLASH->AR, BOOTLOADER_STATUS_STRUCT_ADDR);
-    SET_BIT(FLASH->CR, FLASH_CR_STRT);
-
-    // Wait until the page erase is finished
-    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-        ;
-    CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+    erasePage(BOOTLOADER_STATUS_STRUCT_ADDR);
 
     // Write status to the flash
     uint16_t* data = (uint16_t*)&status;
     uint32_t address = BOOTLOADER_STATUS_STRUCT_ADDR;
-    for (unsigned int i = 0; i < sizeof(status) / sizeof(uint16_t); i++) {
-        SET_BIT(FLASH->CR, FLASH_CR_PG);
-        *(__IO uint16_t*)address = *data;
-        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-            ;
-        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
-        data++;
-        address += 2;
-    }
+    uint32_t size = sizeof(status);
+    programHalfWords(address, data, size);
 
-    // Lock the flash again
-    SET_BIT(FLASH->CR, FLASH_CR_LOCK);
+    lockFlash();
 }
 
 void System::executeFromAddress(uint32_t bootAddress)
@@ -110,6 +92,45 @@ void System::executeFromAddress(uint32_t bootAddress)
 
     /* Should never reach here. */
     __NOP();
+}
+
+void System::erasePage(uint32_t address)
+{
+    // Erase page
+    SET_BIT(FLASH->CR, FLASH_CR_PER);
+    WRITE_REG(FLASH->AR, BOOTLOADER_STATUS_STRUCT_ADDR);
+    SET_BIT(FLASH->CR, FLASH_CR_STRT);
+
+    // Wait until the page erase is finished
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
+    CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+}
+
+void System::programHalfWords(uint32_t address, uint16_t* data, uint32_t size)
+{
+    for (unsigned int i = 0; i < size / sizeof(uint16_t); i++) {
+        SET_BIT(FLASH->CR, FLASH_CR_PG);
+        *(__IO uint16_t*)address = *data;
+        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+            ;
+        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
+        data++;
+        address += 2;
+    }
+}
+
+void System::unlockFlash()
+{
+    WRITE_REG(FLASH->KEYR, FLASH_KEY1);
+    WRITE_REG(FLASH->KEYR, FLASH_KEY2);
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
+}
+
+void System::lockFlash()
+{
+    SET_BIT(FLASH->CR, FLASH_CR_LOCK);
 }
 
 void System::enableWatchdog()

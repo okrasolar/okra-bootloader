@@ -26,6 +26,9 @@
 
 void Bootloader::boot(System& system)
 {
+    /* initialize flash driver */
+    FlashIAP flashIAP(system);
+
     /* grab the status reg */
     BootloaderStatus statusReg;
     system.readStatusReg(statusReg);
@@ -33,7 +36,7 @@ void Bootloader::boot(System& system)
     /* Check if BootloaderStatus has ever been initialized */
     const char* src = BOOTLOADER_NAME;
     char* dst = statusReg.bootloaderName;
-    for (int i = 0; i < BOOTLADER_NAME_LENGTH; i++) {
+    for (int i = 0; i < BOOTLOADER_NAME_LENGTH; i++) {
         if (*src != *dst) {
             statusReg.status = BootloaderState::noState;
             break;
@@ -69,6 +72,8 @@ void Bootloader::boot(System& system)
                     statusReg.liveAppSelect = 0;
                 }
                 system.writeStatusReg(statusReg);
+                /* Use flash driver to copy app binary from the live app's location to boot location */
+               flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
             } else {
                 /* try again */
                 system.writeStatusReg(statusReg);
@@ -82,7 +87,7 @@ void Bootloader::boot(System& system)
             /* Store bootloader name in status flash */
             src = BOOTLOADER_NAME;
             dst = statusReg.bootloaderName;
-            for (int i = 0; i < BOOTLADER_NAME_LENGTH; i++) {
+            for (int i = 0; i < BOOTLOADER_NAME_LENGTH; i++) {
                 *dst++ = *src++;
             }
 
@@ -100,5 +105,5 @@ void Bootloader::boot(System& system)
     }
 
     /* Jump to the app */
-    system.executeFromAddress(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect]);
+    system.executeFromAddress(BOOT_ADDRESS);
 }

@@ -28,6 +28,7 @@
 
 #include "Config.h"
 #include "System.h"
+#include "FlashIAP.h"
 
 class Bootloader
 {

@@ -35,7 +35,7 @@ mcu_files = get_variable('mcu_files')
 # Generate elf file for MCU
 main_elf = executable(
     'main',
-    [ system_files, mcu_files, 'main.cpp', 'src/System_stm32f1.cpp' ],
+    [ system_files, mcu_files, 'main.cpp', 'src/System_stm32f1.cpp', 'src/FlashIAP.cpp' ],
     name_suffix         : 'elf',
     include_directories : [ system_inc, mcu_inc ],
     cpp_args            : [ c_args ],
