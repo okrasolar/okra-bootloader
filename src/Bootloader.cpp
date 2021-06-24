@@ -27,7 +27,7 @@
 void Bootloader::boot(System& system)
 {
     /* initialize flash driver */
-    FlashIAP flashIAP(system);
+    // FlashIAP flashIAP(system);
 
     /* grab the status reg */
     BootloaderStatus statusReg;
@@ -73,7 +73,7 @@ void Bootloader::boot(System& system)
                 }
                 system.writeStatusReg(statusReg);
                 /* Use flash driver to copy app binary from the live app's location to boot location */
-               flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            //    flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
             } else {
                 /* try again */
                 system.writeStatusReg(statusReg);
