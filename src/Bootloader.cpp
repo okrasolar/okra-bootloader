@@ -59,6 +59,7 @@ void Bootloader::boot(System& system, bool enableWatchdog)
             statusReg.status = BootloaderState::attemptNewApp;
             statusReg.retryCount = 0;
             system.writeStatusReg(statusReg);
+            flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
             break;
         }
         case BootloaderState::attemptNewApp: {
