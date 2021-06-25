@@ -29,10 +29,6 @@ int main()
 {
     System sys;
 
-    // if (ENABLE_WATCHDOG) {
-    //     sys.enableWatchdog();
-    // }
-
     Bootloader bl;
     bl.boot(sys, ENABLE_WATCHDOG);
 }

@@ -77,11 +77,8 @@ void Bootloader::boot(System& system, bool enableWatchdog)
                 /* try again */
                 system.writeStatusReg(statusReg); 
             }
-            /* Use flash driver to copy app binary from the live app's location to boot location 
-            Only copy over if it is the first go at attempting the new app */
-            if (statusReg.retryCount == 0) {
-                flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
-            }
+            /* Use flash driver to again copy app binary from the live app's location to boot location */
+            flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
             break;
         }
         case BootloaderState::noState:

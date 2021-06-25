@@ -3,6 +3,7 @@
 
 #include "Bootloader.h"
 #include "System.h"
+#include "FlashIAP.h"
 
 #include <string.h>
 
@@ -31,7 +32,7 @@ void System::executeFromAddress(uint32_t bootAddress)
     finalBootAddress = bootAddress;
 }
 
-void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress)
+void FlashIAP::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size)
 {
     copySourceAddress = sourceAddress;
     copyDestinationAddress = destinationAddress;
@@ -51,11 +52,12 @@ TEST_GROUP(BootLogicTest){
 TEST(BootLogicTest, FirstBoot)
 {
     System sys;
+    bool enableWatchdog = false;
 
     inStatus = { 0 };
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_TRUE(writeCalled);
@@ -76,6 +78,7 @@ TEST(BootLogicTest, FirstBoot)
 TEST(BootLogicTest, BootCurrentApp)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -84,7 +87,7 @@ TEST(BootLogicTest, BootCurrentApp)
     inStatus.liveAppSelect = 0;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_FALSE(writeCalled);
@@ -96,6 +99,7 @@ TEST(BootLogicTest, BootCurrentApp)
 TEST(BootLogicTest, BootCurrentAppB)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -104,7 +108,7 @@ TEST(BootLogicTest, BootCurrentAppB)
     inStatus.liveAppSelect = 1;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_FALSE(writeCalled);
@@ -116,6 +120,7 @@ TEST(BootLogicTest, BootCurrentAppB)
 TEST(BootLogicTest, BootNewAppA)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -124,7 +129,7 @@ TEST(BootLogicTest, BootNewAppA)
     inStatus.liveAppSelect = 0;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_TRUE(writeCalled);
@@ -140,6 +145,7 @@ TEST(BootLogicTest, BootNewAppA)
 TEST(BootLogicTest, BootNewAppB)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -148,7 +154,7 @@ TEST(BootLogicTest, BootNewAppB)
     inStatus.liveAppSelect = 1;
 
     Bootloader bl;
-    bl.boot(sys);
+    bl.boot(sys, enableWatchdog);
 
     CHECK_TRUE(readCalled);
     CHECK_TRUE(writeCalled);
@@ -164,6 +170,7 @@ TEST(BootLogicTest, BootNewAppB)
 TEST(BootLogicTest, BootBAfterAFails)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -173,7 +180,7 @@ TEST(BootLogicTest, BootBAfterAFails)
 
     Bootloader bl;
     for (int i = 0; i < BOOTLOADER_MAX_RETRIES; i++) {
-        bl.boot(sys);
+        bl.boot(sys, enableWatchdog);
         inStatus = outStatus;
     }
 
@@ -191,6 +198,7 @@ TEST(BootLogicTest, BootBAfterAFails)
 TEST(BootLogicTest, BootAAfterBFails)
 {
     System sys;
+    bool enableWatchdog = false;
 
     strcpy(inStatus.bootloaderName, BOOTLOADER_NAME);
     inStatus.bootloaderVersion = (BOOTLOADER_VERSION_BUILD << 16) + (BOOTLOADER_VERSION_MINOR << 8)
@@ -200,7 +208,7 @@ TEST(BootLogicTest, BootAAfterBFails)
 
     Bootloader bl;
     for (int i = 0; i < BOOTLOADER_MAX_RETRIES; i++) {
-        bl.boot(sys);
+        bl.boot(sys, enableWatchdog);
         inStatus = outStatus;
     }
 
