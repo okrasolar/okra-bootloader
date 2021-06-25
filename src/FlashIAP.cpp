@@ -10,6 +10,8 @@ void FlashIAP::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddres
     // erase(destinationAddress, size);
 
     _system.unlockFlash();
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
 
     // Then copy over pages one at a time from source to destination
     while(size != 0) {
@@ -24,12 +26,14 @@ void FlashIAP::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddres
 
         // Read the bytes for this page into the buffer
         read(sourceAddress, buffer, bytesToProgram);
+
+        // Erase the page at the destination
         _system.erasePage(destinationAddress);
         while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
             ;
         CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
         
-        // Write those same bytes into the destination
+        // Write the buffer into the destination
         // write(destinationAddress, buffer, bytesToProgram);
         _system.programHalfWords(destinationAddress, (uint16_t*)buffer, bytesToProgram);
 

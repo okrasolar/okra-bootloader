@@ -54,6 +54,8 @@ void System::writeStatusReg(BootloaderStatus& status)
     static_assert(sizeof(status) % 2 == 0);
 
     unlockFlash();
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
 
     erasePage(BOOTLOADER_STATUS_STRUCT_ADDR);
     while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
@@ -66,11 +68,6 @@ void System::writeStatusReg(BootloaderStatus& status)
     programHalfWords(address, data, size);
 
     lockFlash();
-
-
-    // Try the old thing to see what's working
-    
-
 }
 
 void System::executeFromAddress(uint32_t bootAddress)
@@ -126,8 +123,6 @@ void System::unlockFlash()
 {
     WRITE_REG(FLASH->KEYR, FLASH_KEY1);
     WRITE_REG(FLASH->KEYR, FLASH_KEY2);
-    // while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-    //     ;
 }
 
 void System::lockFlash()
