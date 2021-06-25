@@ -54,6 +54,7 @@ void Bootloader::boot(System& system)
     switch (statusReg.status) {
         case BootloaderState::stableApp: {
             /* Good to go */
+            bootAddress = BOOTLOADER_APP_ADDRESS[0];
             break;
         }
         case BootloaderState::newApp: {
@@ -61,6 +62,8 @@ void Bootloader::boot(System& system)
             statusReg.status = BootloaderState::attemptNewApp;
             statusReg.retryCount = 0;
             system.writeStatusReg(statusReg);
+
+            bootAddress = BOOTLOADER_APP_ADDRESS[0];
             break;
         }
         case BootloaderState::attemptNewApp: {
@@ -80,8 +83,8 @@ void Bootloader::boot(System& system)
             }
             /* Use flash driver to copy app binary from the live app's location to boot location */
             // flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
-            // bootAddress = BOOTLOADER_APP_ADDRESS[0];
-            bootAddress = BOOT_ADDRESS;
+            bootAddress = BOOTLOADER_APP_ADDRESS[0];
+            // bootAddress = BOOT_ADDRESS;
             break;
         }
         case BootloaderState::noState:
@@ -104,6 +107,7 @@ void Bootloader::boot(System& system)
             statusReg.retryCount = 0;
 
             // flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            // bootAddress = BOOTLOADER_APP_ADDRESS[0];
             bootAddress = BOOT_ADDRESS;
 
             system.writeStatusReg(statusReg);

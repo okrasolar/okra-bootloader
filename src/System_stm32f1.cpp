@@ -66,6 +66,11 @@ void System::writeStatusReg(BootloaderStatus& status)
     programHalfWords(address, data, size);
 
     lockFlash();
+
+
+    // Try the old thing to see what's working
+    
+
 }
 
 void System::executeFromAddress(uint32_t bootAddress)
