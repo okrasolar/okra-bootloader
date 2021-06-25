@@ -26,7 +26,7 @@ const uint32_t BOOTLOADER_STATUS_STRUCT_ADDR = 0x08000800;
 const uint8_t BOOTLOADER_MAX_APPS = 2;
 
 /* Size of each app in bytes */
-const int32_t APP_SIZE = 260096;
+const int32_t APP_SIZE = 260090;
 
 /* Source address of the applications */
 const uint32_t BOOTLOADER_APP_ADDRESS[BOOTLOADER_MAX_APPS] = { 0x08040800, 0x08080000 };

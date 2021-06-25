@@ -46,51 +46,26 @@ void System::readStatusReg(BootloaderStatus& status)
 
 void System::writeStatusReg(BootloaderStatus& status)
 {
-    // // Write the status register to the flash
-    // // See ST PM0075 on how to program the flash memory
-    // // https://www.st.com/resource/en/programming_manual/cd00283419.pdf
-
-    // // Make sure the status reg is halfword aligned
-    // static_assert(sizeof(status) % 2 == 0);
-
-    // unlockFlash();
-
-    // erasePage(BOOTLOADER_STATUS_STRUCT_ADDR);
-
-    // Old method, maybe we fuck up somewhere in here
+    // Write the status register to the flash
+    // See ST PM0075 on how to program the flash memory
+    // https://www.st.com/resource/en/programming_manual/cd00283419.pdf
 
     // Make sure the status reg is halfword aligned
     static_assert(sizeof(status) % 2 == 0);
 
-    // Unlock the flash
-    WRITE_REG(FLASH->KEYR, FLASH_KEY1);
-    WRITE_REG(FLASH->KEYR, FLASH_KEY2);
+    unlockFlash();
 
-    // Erase page
-    SET_BIT(FLASH->CR, FLASH_CR_PER);
-    WRITE_REG(FLASH->AR, BOOTLOADER_STATUS_STRUCT_ADDR);
-    SET_BIT(FLASH->CR, FLASH_CR_STRT);
-
-    // Wait until the page erase is finished
+    erasePage(BOOTLOADER_STATUS_STRUCT_ADDR);
     while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
         ;
     CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
 
-    // Write status to the flash
     uint16_t* data = (uint16_t*)&status;
     uint32_t address = BOOTLOADER_STATUS_STRUCT_ADDR;
-    for (unsigned int i = 0; i < sizeof(status) / sizeof(uint16_t); i++) {
-        SET_BIT(FLASH->CR, FLASH_CR_PG);
-        *(__IO uint16_t*)address = *data;
-        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-            ;
-        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
-        data++;
-        address += 2;
-    }
+    uint32_t size = sizeof(status);
+    programHalfWords(address, data, size);
 
-    // Lock the flash again
-    SET_BIT(FLASH->CR, FLASH_CR_LOCK);
+    lockFlash();
 }
 
 void System::executeFromAddress(uint32_t bootAddress)
@@ -125,13 +100,8 @@ void System::erasePage(uint32_t address)
 {
     // Erase page
     SET_BIT(FLASH->CR, FLASH_CR_PER);
-    WRITE_REG(FLASH->AR, BOOTLOADER_STATUS_STRUCT_ADDR);
+    WRITE_REG(FLASH->AR, address);
     SET_BIT(FLASH->CR, FLASH_CR_STRT);
-
-    // Wait until the page erase is finished
-    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-        ;
-    CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
 }
 
 void System::programHalfWords(uint32_t address, uint16_t* data, uint32_t size)
@@ -151,8 +121,8 @@ void System::unlockFlash()
 {
     WRITE_REG(FLASH->KEYR, FLASH_KEY1);
     WRITE_REG(FLASH->KEYR, FLASH_KEY2);
-    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-        ;
+    // while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+    //     ;
 }
 
 void System::lockFlash()

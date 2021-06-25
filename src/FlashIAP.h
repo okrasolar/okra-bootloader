@@ -35,9 +35,9 @@ class FlashIAP : public IFlashStorage
         uint32_t address, uint8_t* data, int32_t size, uint32_t timeout = 500) override;
 
     // TODO: confirm thread safety
-    virtual bool write(
-        uint32_t address, const uint8_t* buffer, int32_t size, uint32_t timeout = 500) override;
-    virtual bool erase(uint32_t address, int32_t size, uint32_t timeout = 4000) override;
+    // virtual bool write(
+    //     uint32_t address, const uint8_t* buffer, int32_t size, uint32_t timeout = 500) override;
+    // virtual bool erase(uint32_t address, int32_t size, uint32_t timeout = 4000) override;
 
   private:
     bool isAligned(uint32_t number, uint32_t alignment);

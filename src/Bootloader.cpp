@@ -27,7 +27,9 @@
 void Bootloader::boot(System& system)
 {
     /* initialize flash driver */
-    // FlashIAP flashIAP(system);
+    FlashIAP flashIAP(system);
+
+    uint32_t bootAddress = BOOT_ADDRESS;
 
     /* grab the status reg */
     BootloaderStatus statusReg;
@@ -72,12 +74,14 @@ void Bootloader::boot(System& system)
                     statusReg.liveAppSelect = 0;
                 }
                 system.writeStatusReg(statusReg);
-                /* Use flash driver to copy app binary from the live app's location to boot location */
-            //    flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
             } else {
                 /* try again */
-                system.writeStatusReg(statusReg);
+                system.writeStatusReg(statusReg); 
             }
+            /* Use flash driver to copy app binary from the live app's location to boot location */
+            // flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            // bootAddress = BOOTLOADER_APP_ADDRESS[0];
+            bootAddress = BOOT_ADDRESS;
             break;
         }
         case BootloaderState::noState:
@@ -99,11 +103,15 @@ void Bootloader::boot(System& system)
             statusReg.liveAppSelect = 0;
             statusReg.retryCount = 0;
 
+            // flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            bootAddress = BOOT_ADDRESS;
+
             system.writeStatusReg(statusReg);
             break;
         }
     }
 
     /* Jump to the app */
-    system.executeFromAddress(BOOT_ADDRESS);
+    // system.executeFromAddress(BOOT_ADDRESS);
+    system.executeFromAddress(bootAddress);
 }

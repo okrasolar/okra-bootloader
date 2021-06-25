@@ -7,27 +7,38 @@ FlashIAP::FlashIAP(System& system) :
 void FlashIAP::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size)
 {
     // First erase space for the app at the destination address
-    erase(destinationAddress, size);
+    // erase(destinationAddress, size);
+
+    _system.unlockFlash();
 
     // Then copy over pages one at a time from source to destination
     while(size != 0) {
-        uint8_t* buffer = 0;
+        // uint8_t* buffer = 0;
         int32_t bytesUntilPageEnd = FLASH_PAGE_SIZE - (sourceAddress % FLASH_PAGE_SIZE);
         int32_t bytesToProgram = size;
 
         if (size > bytesUntilPageEnd) {
             bytesToProgram = bytesUntilPageEnd;
         }
+        uint8_t buffer[bytesToProgram] = {0};
 
         // Read the bytes for this page into the buffer
         read(sourceAddress, buffer, bytesToProgram);
+        _system.erasePage(destinationAddress);
+        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+            ;
+        CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+        
         // Write those same bytes into the destination
-        write(destinationAddress, buffer, bytesToProgram);
+        // write(destinationAddress, buffer, bytesToProgram);
+        _system.programHalfWords(destinationAddress, (uint16_t*)buffer, bytesToProgram);
 
         size -= bytesToProgram;
         sourceAddress += bytesToProgram;
         destinationAddress += bytesToProgram;
     }
+
+    _system.lockFlash();
 }
 
 // size = size of the buffer
@@ -38,51 +49,54 @@ bool FlashIAP::read(uint32_t address, uint8_t* buffer, int32_t size, uint32_t ti
     return true;
 }
 
-bool FlashIAP::write(uint32_t address, const uint8_t* buffer, int32_t size, uint32_t timeout)
-{
-    // Address should be aligned to min programming size
-    // totalBytes must be aligned to min programming size
-    if (!isAligned(address, MIN_PROG_SIZE) || !isAligned(size, MIN_PROG_SIZE)) {
-        return false;
-    }
+// bool FlashIAP::write(uint32_t address, const uint8_t* buffer, int32_t size, uint32_t timeout)
+// {
+//     // Address should be aligned to min programming size
+//     // totalBytes must be aligned to min programming size
+//     if (!isAligned(address, MIN_PROG_SIZE) || !isAligned(size, MIN_PROG_SIZE)) {
+//         return false;
+//     }
 
-    bool success = true;
+//     bool success = true;
 
-    while (size != 0) {
-        int32_t bytesUntilPageEnd = FLASH_PAGE_SIZE - (address % FLASH_PAGE_SIZE);
-        int32_t bytesToProgram = size;
+//     while (size != 0) {
+//         int32_t bytesUntilPageEnd = FLASH_PAGE_SIZE - (address % FLASH_PAGE_SIZE);
+//         int32_t bytesToProgram = size;
 
-        if (size > bytesUntilPageEnd) {
-            bytesToProgram = bytesUntilPageEnd;
-        }
-        _system.programHalfWords(address, (uint16_t*)buffer, bytesToProgram);
+//         if (size > bytesUntilPageEnd) {
+//             bytesToProgram = bytesUntilPageEnd;
+//         }
+//         _system.programHalfWords(address, (uint16_t*)buffer, bytesToProgram);
 
-        size -= bytesToProgram;
-        address += bytesToProgram;
-        buffer += bytesToProgram;
-    }
+//         size -= bytesToProgram;
+//         address += bytesToProgram;
+//         buffer += bytesToProgram;
+//     }
 
-    return success;
-}
+//     return success;
+// }
 
-// will only erase full pages at a time
-// size = number of bytes to erase
-bool FlashIAP::erase(uint32_t address, int32_t size, uint32_t timeout)
-{
-    bool success = true;
+// // will only erase full pages at a time
+// // size = number of bytes to erase
+// bool FlashIAP::erase(uint32_t address, int32_t size, uint32_t timeout)
+// {
+//     bool success = true;
 
-    while (size != 0) {
-        if (!isAlignedToPage(address, size)) {
-            success = false;
-            break;
-        }
-        _system.erasePage(address);
-        size -= FLASH_PAGE_SIZE;
-        address += FLASH_PAGE_SIZE;
-    }
+//     while (size != 0) {
+//         if (!isAlignedToPage(address, size)) {
+//             success = false;
+//             break;
+//         }
+//         _system.erasePage(address);
+//         while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+//             ;
+//         CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+//         size -= FLASH_PAGE_SIZE;
+//         address += FLASH_PAGE_SIZE;
+//     }
 
-    return success;
-}
+//     return success;
+// }
 
 bool FlashIAP::isAligned(uint32_t number, uint32_t alignment)
 {
