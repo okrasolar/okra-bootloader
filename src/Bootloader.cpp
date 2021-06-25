@@ -24,12 +24,10 @@
 
 #include "Bootloader.h"
 
-void Bootloader::boot(System& system)
+void Bootloader::boot(System& system, bool enableWatchdog)
 {
     /* initialize flash driver */
     FlashIAP flashIAP(system);
-
-    uint32_t bootAddress = BOOT_ADDRESS;
 
     /* grab the status reg */
     BootloaderStatus statusReg;
@@ -78,8 +76,11 @@ void Bootloader::boot(System& system)
                 /* try again */
                 system.writeStatusReg(statusReg); 
             }
-            /* Use flash driver to copy app binary from the live app's location to boot location */
-            // flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            /* Use flash driver to copy app binary from the live app's location to boot location 
+            Only copy over if it is the first go at attempting the new app */
+            if (statusReg.retryCount == 0) {
+                flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            }
             break;
         }
         case BootloaderState::noState:
@@ -101,42 +102,17 @@ void Bootloader::boot(System& system)
             statusReg.liveAppSelect = 0;
             statusReg.retryCount = 0;
 
-            // flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
-
-            // flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[0], BOOT_ADDRESS, APP_SIZE);
-            // while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-            //     ;
-
+            flashIAP.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
             system.writeStatusReg(statusReg);
-
-            /* below code used for testing of writeStatusReg */
-            // // See if the status reg has been written properly -- if it has, we should see app B boot
-            // system.readStatusReg(statusReg);
-            // if(statusReg.status == BootloaderState::attemptNewApp) {
-            //     // bootAddress = BOOT_ADDRESS;
-            //     bootAddress = BOOTLOADER_APP_ADDRESS[0];
-            // }
-            // else if (statusReg.status == BootloaderState::noState) {
-            //     bootAddress = BOOT_ADDRESS;
-            //     // bootAddress = BOOTLOADER_APP_ADDRESS[0];
-            // }
-            // else if (statusReg.status == BootloaderState::newApp) {
-            //     bootAddress = BOOT_ADDRESS;
-            //     // bootAddress = BOOTLOADER_APP_ADDRESS[0];
-            // }
-            // else if (statusReg.status == BootloaderState::stableApp) {
-            //     bootAddress = BOOT_ADDRESS;
-            //     // bootAddress = BOOTLOADER_APP_ADDRESS[0];
-            // }
-            // else {
-            //     bootAddress = BOOT_ADDRESS;
-            //     // bootAddress = BOOTLOADER_APP_ADDRESS[0];
-            // }
             break;
         }
     }
 
+    // Watchdog must be enabled after copying over the app to the boot address
+    if (enableWatchdog) {
+        system.enableWatchdog();
+    }
+
     /* Jump to the app */
-    // system.executeFromAddress(BOOT_ADDRESS);
-    system.executeFromAddress(bootAddress);
+    system.executeFromAddress(BOOT_ADDRESS);
 }
