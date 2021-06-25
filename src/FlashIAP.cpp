@@ -22,7 +22,7 @@ void FlashIAP::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddres
         if (size > bytesUntilPageEnd) {
             bytesToProgram = bytesUntilPageEnd;
         }
-        uint8_t buffer[bytesToProgram] = {0};
+        uint8_t buffer[bytesToProgram];
 
         // Read the bytes for this page into the buffer
         read(sourceAddress, buffer, bytesToProgram);

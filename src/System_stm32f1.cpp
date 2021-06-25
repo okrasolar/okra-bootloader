@@ -68,6 +68,8 @@ void System::writeStatusReg(BootloaderStatus& status)
     programHalfWords(address, data, size);
 
     lockFlash();
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
 }
 
 void System::executeFromAddress(uint32_t bootAddress)
