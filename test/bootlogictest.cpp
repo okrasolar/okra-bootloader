@@ -32,6 +32,9 @@ void System::executeFromAddress(uint32_t bootAddress)
     finalBootAddress = bootAddress;
 }
 
+void System::enableWatchdog() {}
+FlashIAP::FlashIAP(System& system): _system(_system) {}
+
 void FlashIAP::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size)
 {
     copySourceAddress = sourceAddress;
