@@ -25,14 +25,20 @@ const uint32_t BOOTLOADER_STATUS_STRUCT_ADDR = 0x08000800;
  * be set to 2, to allow A/B switching between apps after an update */
 const uint8_t BOOTLOADER_MAX_APPS = 2;
 
-/* Size of each app in bytes */
-const int32_t APP_SIZE = 260096;
-
+#ifdef GIGADEVICE
 /* Source address of the applications */
 const uint32_t BOOTLOADER_APP_ADDRESS[BOOTLOADER_MAX_APPS] = { 0x08040800, 0x08080000 };
+#else
+const uint32_t BOOTLOADER_APP_ADDRESS[BOOTLOADER_MAX_APPS] = { 0x08001000, 0x08040800 };
+#endif
 
+#ifdef GIGADEVICE
 /* Actual boot address */
 const uint32_t BOOT_ADDRESS = 0x08001000;
+
+/* Size of each app in bytes */
+const int32_t APP_SIZE = 260096;
+#endif
 
 /* Bootloader state enumeration. This state needs to be set to "newApp"
  * by the application after an update, and to "stableApp" after the

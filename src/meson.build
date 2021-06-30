@@ -2,6 +2,12 @@ mcu_inc = include_directories([
     '.',
 ])
 
-mcu_files = files([
-    'Bootloader.cpp'
-])
+if get_option('GIGADEVICE').enabled()
+    mcu_files = files([
+        'Bootloader_gd.cpp'
+    ])
+else
+    mcu_files = files([
+        'Bootloader_stm.cpp'
+    ])
+endif

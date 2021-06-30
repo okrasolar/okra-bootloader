@@ -1,0 +1,1 @@
+option('GIGADEVICE', type : 'feature', description : 'Enables gigadevice build', yield : true)
