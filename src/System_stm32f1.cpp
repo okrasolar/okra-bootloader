@@ -25,6 +25,21 @@
 #include "System.h"
 #include "stm32f1xx.h"
 
+// Minimum number of bytes to be programmed at a time
+#define MIN_PROG_SIZE 2U   // half word
+#define INVALID_PAGE_SIZE 0xFFFFFFFF
+
+#if (defined(STM32F101x6) || defined(STM32F102x6) || defined(STM32F103x6) || defined(STM32F100xB) || defined(STM32F101xB) || defined(STM32F102xB) || defined(STM32F103xB))
+#define FLASH_PAGE_SIZE          0x400U
+#endif /* STM32F101x6 || STM32F102x6 || STM32F103x6 */
+       /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
+
+#if (defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F103xE) || defined(STM32F101xG) || defined(STM32F103xG) || defined(STM32F105xC) || defined(STM32F107xC))
+#define FLASH_PAGE_SIZE          0x800U
+#endif /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
+       /* STM32F101xG || STM32F103xG */ 
+       /* STM32F105xC || STM32F107xC */
+
 // Watchdog clock frequency is ~40kHz, divide clock by 64
 static const uint32_t WATCHDOG_PRESCALER = 0b100;
 
@@ -98,6 +113,48 @@ void System::executeFromAddress(uint32_t bootAddress)
 
     /* Should never reach here. */
     __NOP();
+}
+
+void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size)
+{
+    // First unlock flash
+    unlockFlash();
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
+
+    // Then copy over pages one at a time from source to destination
+    while(size != 0) {
+        int32_t bytesUntilPageEnd = FLASH_PAGE_SIZE - (sourceAddress % FLASH_PAGE_SIZE);
+        int32_t bytesToProgram = size;
+
+        if (size > bytesUntilPageEnd) {
+            bytesToProgram = bytesUntilPageEnd;
+        }
+        uint8_t buffer[bytesToProgram];
+
+        // Read the bytes for this page into the buffer
+        readFlash(sourceAddress, buffer, bytesToProgram);
+
+        // Erase the page at the destination
+        erasePage(destinationAddress);
+        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+            ;
+        CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+        
+        // Write the buffer into the destination
+        programHalfWords(destinationAddress, (uint16_t*)buffer, bytesToProgram);
+
+        size -= bytesToProgram;
+        sourceAddress += bytesToProgram;
+        destinationAddress += bytesToProgram;
+    }
+
+    lockFlash();
+}
+
+void System::readFlash(uint32_t address, uint8_t* data, int32_t size, uint32_t timeout)
+{
+    memcpy(data, (const void*)address, size);
 }
 
 void System::erasePage(uint32_t address)

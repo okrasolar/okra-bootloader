@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 
 #include "Config.h"
 
@@ -51,6 +52,24 @@ class System
      * @param bootAddress absolute memory address of the binary to execute
      */
     void executeFromAddress(uint32_t bootAddress);
+
+    /**
+     * @brief copy a block of flash from one address to another
+     * 
+     * @param sourceAddress absolute memory address of the flash block
+     * @param destinationAddress absolute memory of the location to write the flash block
+     * @param size size in bytes of the flash block
+     */
+    void copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size);
+
+    /**
+     * @brief read a block of flash into a data buffer
+     * 
+     * @param address absolute memory address of the flash block
+     * @param data buffer used for reading the data
+     * @param size size of the data to read
+     */
+    void readFlash(uint32_t address, uint8_t* data, int32_t size, uint32_t timeout = 500);
 
     /**
      * @brief erase a page of flash at specified address

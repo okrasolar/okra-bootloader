@@ -26,11 +26,6 @@
 
 void Bootloader::boot(System& system, bool enableWatchdog)
 {
-    /* enable watchdog if necessary */
-    if (enableWatchdog) {
-        system.enableWatchdog();
-    }
-
     /* grab the status reg */
     BootloaderStatus statusReg;
     system.readStatusReg(statusReg);
@@ -61,6 +56,9 @@ void Bootloader::boot(System& system, bool enableWatchdog)
             statusReg.status = BootloaderState::attemptNewApp;
             statusReg.retryCount = 0;
             system.writeStatusReg(statusReg);
+            #ifdef COPYBINARY
+            system.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            #endif
             break;
         }
         case BootloaderState::attemptNewApp: {
@@ -76,8 +74,12 @@ void Bootloader::boot(System& system, bool enableWatchdog)
                 system.writeStatusReg(statusReg);
             } else {
                 /* try again */
-                system.writeStatusReg(statusReg);
+                system.writeStatusReg(statusReg); 
             }
+            #ifdef COPYBINARY
+            /* again copy app binary from the live app's location to boot location */
+            system.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            #endif
             break;
         }
         case BootloaderState::noState:
@@ -99,11 +101,23 @@ void Bootloader::boot(System& system, bool enableWatchdog)
             statusReg.liveAppSelect = 0;
             statusReg.retryCount = 0;
 
+            #ifdef COPYBINARY
+            system.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            #endif
             system.writeStatusReg(statusReg);
             break;
         }
     }
 
-    /* Jump to the app */
+    /* Watchdog must be enabled after copying over the app, if we had to do so */
+    if (enableWatchdog) {
+        system.enableWatchdog();
+    }
+
+    /* Boot the app */
+    #ifdef COPYBINARY
+    system.executeFromAddress(BOOT_ADDRESS);
+    #else
     system.executeFromAddress(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect]);
+    #endif
 }

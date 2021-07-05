@@ -1,1 +1,1 @@
-option('GIGADEVICE', type : 'feature', description : 'Enables gigadevice build', yield : true)
+option('COPYBINARY', type : 'feature', description : 'Enables binary copying')

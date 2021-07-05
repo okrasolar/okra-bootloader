@@ -9,6 +9,8 @@
 BootloaderStatus inStatus;
 BootloaderStatus outStatus;
 uint32_t finalBootAddress = 0;
+uint32_t copySourceAddress = 0;
+uint32_t copyDestinationAddress = 0;
 bool readCalled = false;
 bool writeCalled = false;
 
@@ -27,6 +29,14 @@ void System::writeStatusReg(BootloaderStatus& status)
 void System::executeFromAddress(uint32_t bootAddress)
 {
     finalBootAddress = bootAddress;
+}
+
+void System::enableWatchdog() {}
+
+void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t sizr)
+{
+    copySourceAddress = sourceAddress;
+    copyDestinationAddress = destinationAddress;
 }
 
 TEST_GROUP(BootLogicTest){
@@ -60,7 +70,13 @@ TEST(BootLogicTest, FirstBoot)
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
     CHECK_EQUAL(0, outStatus.liveAppSelect);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootCurrentAppA)
@@ -80,7 +96,13 @@ TEST(BootLogicTest, BootCurrentAppA)
     CHECK_TRUE(readCalled);
     CHECK_FALSE(writeCalled);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootCurrentAppB)
@@ -100,7 +122,13 @@ TEST(BootLogicTest, BootCurrentAppB)
     CHECK_TRUE(readCalled);
     CHECK_FALSE(writeCalled);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[1]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[1], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootNewAppA)
@@ -122,7 +150,13 @@ TEST(BootLogicTest, BootNewAppA)
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootNewAppB)
@@ -144,7 +178,13 @@ TEST(BootLogicTest, BootNewAppB)
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[1]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[1], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootBAfterAFails)
@@ -169,7 +209,13 @@ TEST(BootLogicTest, BootBAfterAFails)
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[1]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[1], finalBootAddress);
+    #endif
 }
 
 TEST(BootLogicTest, BootAAfterBFails)
@@ -194,5 +240,11 @@ TEST(BootLogicTest, BootAAfterBFails)
 
     CHECK_EQUAL(BootloaderState::attemptNewApp, outStatus.status);
 
+    #ifdef COPYBINARY
+    CHECK_EQUAL(copySourceAddress, BOOTLOADER_APP_ADDRESS[0]);
+    CHECK_EQUAL(copyDestinationAddress, BOOT_ADDRESS);
+    CHECK_EQUAL(BOOT_ADDRESS, finalBootAddress);
+    #else
     CHECK_EQUAL(BOOTLOADER_APP_ADDRESS[0], finalBootAddress);
+    #endif
 }

@@ -17,8 +17,8 @@ size         = '@0@'.format(find_program('size').path())
 
 # Build time defines
 option_defines = []
-if get_option('GIGADEVICE').enabled()
-    option_defines += '-DGIGADEVICE'
+if get_option('COPYBINARY').enabled()
+    option_defines += '-DCOPYBINARY'
 endif
 
 # Startup and system files
@@ -41,7 +41,7 @@ mcu_files = get_variable('mcu_files')
 # Generate elf file for MCU
 main_elf = executable(
     'main',
-    [ system_files, mcu_files, 'main.cpp', 'src/System_stm32f1.cpp', 'src/FlashIAP.cpp' ],
+    [ system_files, mcu_files, 'main.cpp', 'src/System_stm32f1.cpp' ],
     name_suffix         : 'elf',
     include_directories : [ system_inc, mcu_inc ],
     cpp_args            : [ c_args ],
