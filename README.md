@@ -46,6 +46,12 @@ The build system is Meson + Ninja
 - `cd build`
 - `ninja`
 
+## Build options
+There is a single build option "COPYBINARY". When this option is enabled, the boot address is distinct
+from the locations where the apps are stored. On boot, the live app is copied over from its stored location to the boot
+address, and it is then booted from there. You can enable this option from the build folder with the following command:
+- `meson configure -DCOPYBINARY=enabled`
+
 ## TODO
 Currently, the bootloader erases the whole page at 'BOOTLOADER_STATUS_STRUCT_ADDR',
 and it's content is lost. The bootloader should restore the contents of the page.
