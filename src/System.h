@@ -25,7 +25,6 @@
 #pragma once
 
 #include <cstdint>
-#include <cstring>
 
 #include "Config.h"
 
@@ -55,7 +54,7 @@ class System
 
     /**
      * @brief copy a block of flash from one address to another
-     * 
+     *
      * @param sourceAddress absolute memory address of the flash block
      * @param destinationAddress absolute memory of the location to write the flash block
      * @param size size in bytes of the flash block
@@ -64,23 +63,23 @@ class System
 
     /**
      * @brief read a block of flash into a data buffer
-     * 
+     *
      * @param address absolute memory address of the flash block
      * @param data buffer used for reading the data
      * @param size size of the data to read
      */
-    void readFlash(uint32_t address, uint8_t* data, int32_t size, uint32_t timeout = 500);
+    void readFlash(uint32_t address, uint8_t* data, int32_t size);
 
     /**
      * @brief erase a page of flash at specified address
-     * 
+     *
      * @param address
      */
     void erasePage(uint32_t address);
 
     /**
      * @brief program up to a single page of flash
-     * 
+     *
      * @param address absolute memory address to program
      * @param data pointer to data that we want to program
      * @param size size in bytes of the data that we want to program

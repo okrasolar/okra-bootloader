@@ -37,7 +37,7 @@
 #if (defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F103xE) || defined(STM32F101xG) || defined(STM32F103xG) || defined(STM32F105xC) || defined(STM32F107xC))
 #define FLASH_PAGE_SIZE          0x800U
 #endif /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
-       /* STM32F101xG || STM32F103xG */ 
+       /* STM32F101xG || STM32F103xG */
        /* STM32F105xC || STM32F107xC */
 
 // Watchdog clock frequency is ~40kHz, divide clock by 64
@@ -140,7 +140,7 @@ void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress,
         while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
             ;
         CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
-        
+
         // Write the buffer into the destination
         programHalfWords(destinationAddress, (uint16_t*)buffer, bytesToProgram);
 
@@ -152,9 +152,12 @@ void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress,
     lockFlash();
 }
 
-void System::readFlash(uint32_t address, uint8_t* data, int32_t size, uint32_t timeout)
+void System::readFlash(uint32_t address, uint8_t* data, int32_t size)
 {
-    memcpy(data, (const void*)address, size);
+    uint8_t* src = (uint8_t*)address;
+    for (int i = 0; i < size; i++) {
+        *data++ = *src++;
+    }
 }
 
 void System::erasePage(uint32_t address)
