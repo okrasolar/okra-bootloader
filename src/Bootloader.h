@@ -36,5 +36,5 @@ class Bootloader
      * @brief entrypoint for the bootloader. Selects and runs the application
      * to boot.
      */
-    void boot(System& _system);
+    void boot(System& _system, bool enableWatchdog);
 };

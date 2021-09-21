@@ -39,7 +39,7 @@ class System
     void readStatusReg(BootloaderStatus& status);
 
     /**
-     * @brief write the stataus into flash
+     * @brief write the status into flash
      *
      * @param status new status data to write
      */
@@ -51,6 +51,50 @@ class System
      * @param bootAddress absolute memory address of the binary to execute
      */
     void executeFromAddress(uint32_t bootAddress);
+
+    /**
+     * @brief copy a block of flash from one address to another
+     *
+     * @param sourceAddress absolute memory address of the flash block
+     * @param destinationAddress absolute memory of the location to write the flash block
+     * @param size size in bytes of the flash block
+     */
+    void copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size);
+
+    /**
+     * @brief read a block of flash into a data buffer
+     *
+     * @param address absolute memory address of the flash block
+     * @param data buffer used for reading the data
+     * @param size size of the data to read
+     */
+    void readFlash(uint32_t address, uint8_t* data, int32_t size);
+
+    /**
+     * @brief erase a page of flash at specified address
+     *
+     * @param address
+     */
+    void erasePage(uint32_t address);
+
+    /**
+     * @brief program up to a single page of flash
+     *
+     * @param address absolute memory address to program
+     * @param data pointer to data that we want to program
+     * @param size size in bytes of the data that we want to program
+     */
+    void programHalfWords(uint32_t address, uint16_t* data, uint32_t size);
+
+    /**
+     * @brief unlock the flash
+     */
+    void unlockFlash();
+
+    /**
+     * @brief lock the flash
+     */
+    void lockFlash();
 
     /**
      * @brief enables the MCU's watchdog.

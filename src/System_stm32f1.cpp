@@ -25,6 +25,21 @@
 #include "System.h"
 #include "stm32f1xx.h"
 
+// Minimum number of bytes to be programmed at a time
+#define MIN_PROG_SIZE 2U   // half word
+#define INVALID_PAGE_SIZE 0xFFFFFFFF
+
+#if (defined(STM32F101x6) || defined(STM32F102x6) || defined(STM32F103x6) || defined(STM32F100xB) || defined(STM32F101xB) || defined(STM32F102xB) || defined(STM32F103xB))
+#define FLASH_PAGE_SIZE          0x400U
+#endif /* STM32F101x6 || STM32F102x6 || STM32F103x6 */
+       /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
+
+#if (defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F103xE) || defined(STM32F101xG) || defined(STM32F103xG) || defined(STM32F105xC) || defined(STM32F107xC))
+#define FLASH_PAGE_SIZE          0x800U
+#endif /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
+       /* STM32F101xG || STM32F103xG */
+       /* STM32F105xC || STM32F107xC */
+
 // Watchdog clock frequency is ~40kHz, divide clock by 64
 static const uint32_t WATCHDOG_PRESCALER = 0b100;
 
@@ -53,42 +68,23 @@ void System::writeStatusReg(BootloaderStatus& status)
     // Make sure the status reg is halfword aligned
     static_assert(sizeof(status) % 2 == 0);
 
-    // Unlock the flash
-    WRITE_REG(FLASH->KEYR, FLASH_KEY1);
-    WRITE_REG(FLASH->KEYR, FLASH_KEY2);
+    unlockFlash();
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
 
-    int retry = 0;
-    while(READ_BIT(FLASH->CR, FLASH_CR_LOCK) != RESET) {
-        if (retry++ > 100000) {
-            return;
-        }
-    }
-
-    // Erase page
-    SET_BIT(FLASH->CR, FLASH_CR_PER);
-    WRITE_REG(FLASH->AR, BOOTLOADER_STATUS_STRUCT_ADDR);
-    SET_BIT(FLASH->CR, FLASH_CR_STRT);
-
-    // Wait until the page erase is finished
+    erasePage(BOOTLOADER_STATUS_STRUCT_ADDR);
     while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
         ;
     CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
 
-    // Write status to the flash
     uint16_t* data = (uint16_t*)&status;
     uint32_t address = BOOTLOADER_STATUS_STRUCT_ADDR;
-    for (unsigned int i = 0; i < sizeof(status) / sizeof(uint16_t); i++) {
-        SET_BIT(FLASH->CR, FLASH_CR_PG);
-        *(__IO uint16_t*)address = *data;
-        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
-            ;
-        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
-        data++;
-        address += 2;
-    }
+    uint32_t size = sizeof(status);
+    programHalfWords(address, data, size);
 
-    // Lock the flash again
-    SET_BIT(FLASH->CR, FLASH_CR_LOCK);
+    lockFlash();
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
 }
 
 void System::executeFromAddress(uint32_t bootAddress)
@@ -117,6 +113,83 @@ void System::executeFromAddress(uint32_t bootAddress)
 
     /* Should never reach here. */
     __NOP();
+}
+
+void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size)
+{
+    // First unlock flash
+    unlockFlash();
+    while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+        ;
+
+    // Then copy over pages one at a time from source to destination
+    while(size != 0) {
+        int32_t bytesUntilPageEnd = FLASH_PAGE_SIZE - (sourceAddress % FLASH_PAGE_SIZE);
+        int32_t bytesToProgram = size;
+
+        if (size > bytesUntilPageEnd) {
+            bytesToProgram = bytesUntilPageEnd;
+        }
+        uint8_t buffer[bytesToProgram];
+
+        // Read the bytes for this page into the buffer
+        readFlash(sourceAddress, buffer, bytesToProgram);
+
+        // Erase the page at the destination
+        erasePage(destinationAddress);
+        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+            ;
+        CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+
+        // Write the buffer into the destination
+        programHalfWords(destinationAddress, (uint16_t*)buffer, bytesToProgram);
+
+        size -= bytesToProgram;
+        sourceAddress += bytesToProgram;
+        destinationAddress += bytesToProgram;
+    }
+
+    lockFlash();
+}
+
+void System::readFlash(uint32_t address, uint8_t* data, int32_t size)
+{
+    uint8_t* src = (uint8_t*)address;
+    for (int i = 0; i < size; i++) {
+        *data++ = *src++;
+    }
+}
+
+void System::erasePage(uint32_t address)
+{
+    // Erase page
+    SET_BIT(FLASH->CR, FLASH_CR_PER);
+    WRITE_REG(FLASH->AR, address);
+    SET_BIT(FLASH->CR, FLASH_CR_STRT);
+}
+
+void System::programHalfWords(uint32_t address, uint16_t* data, uint32_t size)
+{
+    for (unsigned int i = 0; i < size / sizeof(uint16_t); i++) {
+        SET_BIT(FLASH->CR, FLASH_CR_PG);
+        *(__IO uint16_t*)address = *data;
+        while (READ_BIT(FLASH->SR, FLASH_SR_BSY))
+            ;
+        CLEAR_BIT(FLASH->CR, FLASH_CR_PG);
+        data++;
+        address += 2;
+    }
+}
+
+void System::unlockFlash()
+{
+    WRITE_REG(FLASH->KEYR, FLASH_KEY1);
+    WRITE_REG(FLASH->KEYR, FLASH_KEY2);
+}
+
+void System::lockFlash()
+{
+    SET_BIT(FLASH->CR, FLASH_CR_LOCK);
 }
 
 void System::enableWatchdog()

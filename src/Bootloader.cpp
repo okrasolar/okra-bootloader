@@ -24,7 +24,7 @@
 
 #include "Bootloader.h"
 
-void Bootloader::boot(System& system)
+void Bootloader::boot(System& system, bool enableWatchdog)
 {
     /* grab the status reg */
     BootloaderStatus statusReg;
@@ -33,7 +33,7 @@ void Bootloader::boot(System& system)
     /* Check if BootloaderStatus has ever been initialized */
     const char* src = BOOTLOADER_NAME;
     char* dst = statusReg.bootloaderName;
-    for (int i = 0; i < BOOTLADER_NAME_LENGTH; i++) {
+    for (int i = 0; i < BOOTLOADER_NAME_LENGTH; i++) {
         if (*src != *dst) {
             statusReg.status = BootloaderState::noState;
             break;
@@ -56,6 +56,9 @@ void Bootloader::boot(System& system)
             statusReg.status = BootloaderState::attemptNewApp;
             statusReg.retryCount = 0;
             system.writeStatusReg(statusReg);
+            #ifdef COPYBINARY
+            system.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            #endif
             break;
         }
         case BootloaderState::attemptNewApp: {
@@ -71,8 +74,12 @@ void Bootloader::boot(System& system)
                 system.writeStatusReg(statusReg);
             } else {
                 /* try again */
-                system.writeStatusReg(statusReg);
+                system.writeStatusReg(statusReg); 
             }
+            #ifdef COPYBINARY
+            /* again copy app binary from the live app's location to boot location */
+            system.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            #endif
             break;
         }
         case BootloaderState::noState:
@@ -82,7 +89,7 @@ void Bootloader::boot(System& system)
             /* Store bootloader name in status flash */
             src = BOOTLOADER_NAME;
             dst = statusReg.bootloaderName;
-            for (int i = 0; i < BOOTLADER_NAME_LENGTH; i++) {
+            for (int i = 0; i < BOOTLOADER_NAME_LENGTH; i++) {
                 *dst++ = *src++;
             }
 
@@ -94,11 +101,23 @@ void Bootloader::boot(System& system)
             statusReg.liveAppSelect = 0;
             statusReg.retryCount = 0;
 
+            #ifdef COPYBINARY
+            system.copyFlashBlock(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect], BOOT_ADDRESS, APP_SIZE);
+            #endif
             system.writeStatusReg(statusReg);
             break;
         }
     }
 
-    /* Jump to the app */
+    /* Watchdog must be enabled after copying over the app, if we had to do so */
+    if (enableWatchdog) {
+        system.enableWatchdog();
+    }
+
+    /* Boot the app */
+    #ifdef COPYBINARY
+    system.executeFromAddress(BOOT_ADDRESS);
+    #else
     system.executeFromAddress(BOOTLOADER_APP_ADDRESS[statusReg.liveAppSelect]);
+    #endif
 }

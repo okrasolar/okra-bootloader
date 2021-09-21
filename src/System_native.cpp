@@ -33,4 +33,16 @@ void System::writeStatusReg(BootloaderStatus& status) {}
 
 void System::executeFromAddress(uint32_t bootAddress) {}
 
+void System::copyFlashBlock(uint32_t sourceAddress, uint32_t destinationAddress, int32_t size) {}
+
+void System::readFlash(uint32_t address, uint8_t* data, int32_t size) {}
+
+void System::erasePage(uint32_t address) {}
+
+void System::programHalfWords(uint32_t address, uint16_t* data, uint32_t size) {}
+
+void System::unlockFlash() {}
+
+void System::lockFlash() {}
+
 void System::enableWatchdog() {}

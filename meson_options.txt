@@ -1,0 +1,1 @@
+option('COPYBINARY', type : 'feature', yield : true, description : 'Enables binary copying')
