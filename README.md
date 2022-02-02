@@ -6,7 +6,7 @@ the MCUs flash: App A and app B. While app A is running, it can update app B,
 and vice versa.
 
 The bootloader is designed to be small and simple, it's total binary size is
-only around 800 bytes.
+only around 900 bytes.
 
 At first boot and after updating the other binary, the app needs to inform
 the bootloader by writing a status flag to a specific address in the flash
@@ -42,7 +42,7 @@ linker-script "linker.ld" for the architecture accordingly.
 The build system is Meson + Ninja
 
 ## Build example
-- `meson build --cross-file meson.cross.build`
+- `meson build --cross-file cross-stm32f1.ini`
 - `cd build`
 - `ninja`
 
