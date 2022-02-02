@@ -2,7 +2,7 @@ project(
     'edamame-bootloader',
     'c',
     'cpp',
-    version: '0.0.3',
+    version: '0.0.4',
     default_options:  [ 'c_std=c11', 'cpp_std=gnu++11' ]
 )
 
@@ -21,33 +21,49 @@ if get_option('COPYBINARY').enabled()
     option_defines += '-DCOPYBINARY'
 endif
 
+system_files = files([ 'src/System_stm32.cpp' ])
+
 # Startup and system files
-system_files = files([
-    'startup.s',
-    'system.c'
-])
-system_inc = include_directories([
-    'CMSIS/Include',
-    'CMSIS/Device/ST/STM32F1xx/Include'
-])
+if (host_machine.cpu() == 'cortex-m3')
+    system_files += files([
+        'src/stm32f1/startup.s',
+        'src/stm32f1/system.c',
+    ])
+    system_inc = include_directories([
+        'CMSIS_STM32F1/Include',
+        'CMSIS_STM32F1/Device/ST/STM32F1xx/Include'
+    ])
+    link_args = '-Wl,-T,@0@/@1@'.format(meson.current_source_dir(), 'src/stm32f1/linker.ld')
+elif (host_machine.cpu() == 'cortex-m4')
+    system_files += files([
+        'src/stm32f3/startup.s',
+        'src/stm32f3/system.c',
+    ])
+    system_inc = include_directories([
+        'CMSIS_STM32F3/Include',
+        'CMSIS_STM32F3/Device/ST/STM32F3xx/Include'
+    ])
+    link_args = '-Wl,-T,@0@/@1@'.format(meson.current_source_dir(), 'src/stm32f3/linker.ld')
+endif
+
 c_args = [ option_defines, '-Os' ]
-link_args = '-Wl,-T,@0@/@1@'.format(meson.current_source_dir(), 'linker.ld')
 
 # Add src dependancies
-subdir('src')
-mcu_inc   = get_variable('mcu_inc')
-mcu_files = get_variable('mcu_files')
+src_inc   = [ 'src/' ]
+src_files = [ 'src/Bootloader.cpp' ]
 
 # Generate elf file for MCU
 main_elf = executable(
     'main',
-    [ system_files, mcu_files, 'main.cpp', 'src/System_stm32f1.cpp' ],
+    [ system_files, src_files, 'src/main.cpp' ],
     name_suffix         : 'elf',
-    include_directories : [ system_inc, mcu_inc ],
+    include_directories : [ system_inc, src_inc ],
     cpp_args            : [ c_args ],
     c_args              : [ c_args ],
     link_args           : [ link_args ]
 )
+
+message(host_machine.cpu())
 
 if (meson.is_subproject() != true)
     # Build custom targets MCU
@@ -75,8 +91,8 @@ if (meson.is_subproject() != true)
     test_files = get_variable('test_files')
     main_test = executable(
         'tests',
-        [ mcu_files, test_files ],
-        include_directories : [ system_inc, mcu_inc ],
+        [ src_files, test_files ],
+        include_directories : [ system_inc, src_inc ],
         dependencies        : [ cpputest_dep ],
         c_args: option_defines,
         cpp_args: option_defines,

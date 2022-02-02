@@ -23,7 +23,6 @@
  */
 
 #include "System.h"
-#include "stm32f1xx.h"
 
 // Minimum number of bytes to be programmed at a time
 #define MIN_PROG_SIZE 2U   // half word
@@ -31,14 +30,32 @@
 
 #if (defined(STM32F101x6) || defined(STM32F102x6) || defined(STM32F103x6) || defined(STM32F100xB) || defined(STM32F101xB) || defined(STM32F102xB) || defined(STM32F103xB))
 #define FLASH_PAGE_SIZE          0x400U
-#endif /* STM32F101x6 || STM32F102x6 || STM32F103x6 */
+#include "stm32f1xx.h"
+       /* STM32F101x6 || STM32F102x6 || STM32F103x6 */
        /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
 
-#if (defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F103xE) || defined(STM32F101xG) || defined(STM32F103xG) || defined(STM32F105xC) || defined(STM32F107xC))
+#elif (defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F103xE) || defined(STM32F101xG) || defined(STM32F103xG) || defined(STM32F105xC) || defined(STM32F107xC))
 #define FLASH_PAGE_SIZE          0x800U
-#endif /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
+#include "stm32f1xx.h"
+       /* STM32F100xB || STM32F101xB || STM32F102xB || STM32F103xB */
        /* STM32F101xG || STM32F103xG */
        /* STM32F105xC || STM32F107xC */
+
+#elif (defined(STM32F302xC) || defined(STM32F303xC) || defined(STM32F358xx) || defined(STM32F373xC) || defined(STM32F378xx) || defined(STM32F302xE) || defined(STM32F303xE) \
+    || defined(STM32F398xx) || defined(STM32F301x8) || defined(STM32F302x8) || defined(STM32F318xx) || defined(STM32F303x8) || defined(STM32F334x8) || defined(STM32F328xx) \
+    || defined(STM32F302xC) || defined(STM32F303xC) || defined(STM32F358xx) || defined(STM32F373xC) || defined(STM32F378xx) || defined(STM32F302xE) || defined(STM32F303xE) \
+    || defined(STM32F398xx) || defined(STM32F301x8) || defined(STM32F302x8) || defined(STM32F318xx) || defined(STM32F303x8) || defined(STM32F334x8) || defined(STM32F328xx))
+#define FLASH_PAGE_SIZE          0x800U
+#include "stm32f3xx.h"
+#endif /* STM32F302xC || STM32F303xC || STM32F358xx || */
+       /* STM32F373xC || STM32F378xx */
+       /* STM32F301x8 || STM32F302x8 || STM32F318xx || */
+       /* STM32F303x8 || STM32F334x8 || STM32F328xx */
+       /* STM32F302xC || STM32F303xC || STM32F358xx || */
+       /* STM32F373xC || STM32F378xx */
+       /* STM32F302xE || STM32F303xE || STM32F398xx */
+       /* STM32F301x8 || STM32F302x8 || STM32F318xx || */
+       /* STM32F303x8 || STM32F334x8 || STM32F328xx */
 
 // Watchdog clock frequency is ~40kHz, divide clock by 64
 static const uint32_t WATCHDOG_PRESCALER = 0b100;
